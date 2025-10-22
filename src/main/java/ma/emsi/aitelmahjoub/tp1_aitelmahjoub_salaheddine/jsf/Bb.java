@@ -6,6 +6,8 @@ import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import ma.emsi.aitelmahjoub.tp1_aitelmahjoub_salaheddine.LLM.JsonUtilPourGemini;
+import ma.emsi.aitelmahjoub.tp1_aitelmahjoub_salaheddine.LLM.LlmInteraction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,9 +20,12 @@ import java.util.Locale;
  */
 @Named
 @ViewScoped
+
 public class Bb implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Inject
+    private JsonUtilPourGemini jsonUtil;
 
     /**
      * Rôle "système" que l'on attribuera plus tard à un LLM.
@@ -51,9 +56,26 @@ public class Bb implements Serializable {
     private String reponse;
 
     /**
+     * Texte JSON de la requête envoyée (exposé à la page).
+     */
+    private String texteRequeteJson;
+
+    /**
+     * Texte JSON de la réponse reçue (exposé à la page).
+     */
+    private String texteReponseJson;
+
+
+
+
+    /**
      * La conversation depuis le début.
      */
     private StringBuilder conversation = new StringBuilder();
+
+
+
+
 
     /**
      * Contexte JSF. Utilisé pour qu'un message d'erreur s'affiche dans le formulaire.
@@ -99,6 +121,43 @@ public class Bb implements Serializable {
     public void setReponse(String reponse) {
         this.reponse = reponse;
     }
+    /*
+    * getter et setter pour texteRequeteJson
+    */
+    public String getTexteRequeteJson() {
+
+        return texteRequeteJson;
+    }
+
+    public void setTexteRequeteJson(String texteRequeteJson) {
+        this.texteRequeteJson = texteRequeteJson;
+    }
+    /*
+     * getter et setter pour texteReponseJson
+     */
+    public String getTexteReponseJson() {
+        return texteReponseJson;
+    }
+
+    public void setTexteReponseJson(String texteReponseJson) {
+        this.texteReponseJson = texteReponseJson;
+    }
+    /*
+     * getter et setter pour isDebug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+
+    /**
+     * Flag pour activer/désactiver le mode debug (affichage des JSON).
+     */
+    private boolean debug = false;
 
     public String getConversation() {
         return conversation.toString();
@@ -121,18 +180,41 @@ public class Bb implements Serializable {
             facesContext.addMessage(null, message);
             return null;
         }
-        // Entourer la réponse avec "||".
-        this.reponse = "||";
-        // Si la conversation n'a pas encore commencé, ajouter le rôle système au début de la réponse
-        if (this.conversation.isEmpty()) {
-            if (this.roleSysteme != null) {
-                this.reponse += roleSysteme.toUpperCase(Locale.FRENCH) + "\n";
+        try {
+            // passer le rôle système au util JSON (évite null)
+            jsonUtil.setSystemRole(this.roleSysteme);
+
+            //  Appel à l’utilitaire JSON + API Gemini
+            LlmInteraction interaction = jsonUtil.envoyerRequete(question);
+
+            //  Met à jour les champs affichés dans la page
+            this.reponse = interaction.getReponseTexte();
+            this.texteRequeteJson = interaction.getTexteRequeteJson();
+            this.texteReponseJson = interaction.getTexteReponseJson();
+
+            // Si la conversation n’a pas encore commencé, ajoute le rôle système
+            if (this.conversation.isEmpty()) {
+                if (this.roleSysteme != null) {
+                    this.reponse = roleSysteme.toUpperCase(Locale.FRENCH) + "\n" + this.reponse;
+                }
+                this.roleSystemeChangeable = false;
             }
-            this.roleSystemeChangeable = false;
+
+            // Affiche la conversation
+            afficherConversation();
+
+        } catch (Exception e) {
+            //  Gestion d’erreur : problème de connexion ou de requête
+            FacesMessage message = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Problème de connexion avec l'API du LLM",
+                    "Problème de connexion avec l'API du LLM : " + e.getMessage()
+            );
+            facesContext.addMessage(null, message);
         }
-        this.reponse += question.toLowerCase(Locale.FRENCH) + "||";
-        afficherConversation();
+
         return null;
+
     }
 
     /**
@@ -143,6 +225,14 @@ public class Bb implements Serializable {
     public String nouveauChat() {
         return "index";
     }
+
+    /**
+     * Basculer le mode debug.
+     */
+    public void toggleDebug() {
+        this.setDebug(!isDebug());
+    }
+
 
     /**
      * Concatène la question / réponse à la conversation.
