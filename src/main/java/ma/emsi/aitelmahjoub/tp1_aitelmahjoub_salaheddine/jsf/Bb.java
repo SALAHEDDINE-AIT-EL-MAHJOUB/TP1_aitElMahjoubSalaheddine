@@ -170,7 +170,7 @@ public class Bb implements Serializable {
     /**
      * Envoie la question au serveur. En attendant une vraie API LLM,
      * on réalise un traitement factice pour tester le fonctionnement.
-     *
+
      * @return null pour rester sur la même page (même vue).
      */
     public String envoyer() {
@@ -200,7 +200,7 @@ public class Bb implements Serializable {
                 this.roleSystemeChangeable = false;
             }
 
-            // Affiche la conversation
+            // Affiche la conversation.
             afficherConversation();
 
         } catch (Exception e) {
@@ -270,6 +270,14 @@ public class Bb implements Serializable {
                     are you tell them the average price of a meal.
                     """;
             this.listeRolesSysteme.add(new SelectItem(role, "Guide touristique"));
+
+            // Nouveau rôle système : ton humoristique
+            role = """
+                    You are a stylistic assistant. Always answer in a light-hearted, humorous tone while remaining helpful and respectful.
+                    Keep replies concise and clear; use playful metaphors or gentle jokes to illustrate points.
+                    Avoid offensive, insensitive or inappropriate humor. If the user requests a formal answer, switch to a neutral, professional tone.
+                    """;
+            this.listeRolesSysteme.add(new SelectItem(role, " Humoristique"));
         }
         return this.listeRolesSysteme;
     }
