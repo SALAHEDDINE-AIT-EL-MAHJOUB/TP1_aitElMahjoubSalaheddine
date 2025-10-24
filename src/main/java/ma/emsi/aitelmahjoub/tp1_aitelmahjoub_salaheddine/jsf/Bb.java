@@ -6,8 +6,8 @@ import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import ma.emsi.aitelmahjoub.tp1_aitelmahjoub_salaheddine.LLM.JsonUtilPourGemini;
-import ma.emsi.aitelmahjoub.tp1_aitelmahjoub_salaheddine.LLM.LlmInteraction;
+import ma.emsi.aitelmahjoub.tp2_aitelmahjoub_salaheddine.llm.JsonUtilPourGemini;
+import ma.emsi.aitelmahjoub.tp2_aitelmahjoub_salaheddine.llm.LlmInteraction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -122,8 +122,8 @@ public class Bb implements Serializable {
         this.reponse = reponse;
     }
     /*
-    * getter et setter pour texteRequeteJson
-    */
+     * getter et setter pour texteRequeteJson
+     */
     public String getTexteRequeteJson() {
 
         return texteRequeteJson;
@@ -238,7 +238,7 @@ public class Bb implements Serializable {
      * Concatène la question / réponse à la conversation.
      */
     private void afficherConversation() {
-        this.conversation.append("== User:\n").append(question).append("\n== Serveur:\n").append(reponse).append("\n");
+        this.conversation.append("== User:\n").append(question).append("\n== LLM:\n").append(reponse).append("\n");
     }
 
     /**
